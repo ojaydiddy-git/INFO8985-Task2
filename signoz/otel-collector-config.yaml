@@ -34,6 +34,19 @@ receivers:
       #   endpoint: 0.0.0.0:6831
       # thrift_binary:
       #   endpoint: 0.0.0.0:6832
+  sqlquery:
+    driver: postgres
+    datasource: "host=db port=5432 user=devtedsuser password=devtedspass sslmode=disable database=lcbo" 
+    queries:
+      # - sql: "select * from my_logs where log_id > $$1"
+      #   tracking_start_value: "10000"
+      #   tracking_column: log_id
+      #   logs:
+      #     - body_column: log_body
+      - sql: "select count(*) as count, genre from movie group by genre"
+        metrics:
+          - metric_name: movie.genres
+            value_column: "count"
   hostmetrics:
     collection_interval: 30s
     root_path: /hostfs
@@ -173,7 +186,7 @@ service:
       processors: [signozspanmetrics/cumulative, signozspanmetrics/delta, batch]
       exporters: [clickhousetraces]
     metrics:
-      receivers: [otlp]
+      receivers: [otlp,sqlquery]
       processors: [batch]
       exporters: [clickhousemetricswrite]
     metrics/generic:

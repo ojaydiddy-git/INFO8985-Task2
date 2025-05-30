@@ -36,7 +36,7 @@ receivers:
       #   endpoint: 0.0.0.0:6832
   sqlquery:
     driver: postgres
-    datasource: "host=db port=5432 user=devtedsuser password=devtedspass sslmode=disable database=lcbo" 
+    datasource: "host=db port=5432 user=devtedsuser password=devtedspass sslmode=disable database=lcbo"
     queries:
       # - sql: "select * from my_logs where log_id > $$1"
       #   tracking_start_value: "10000"
@@ -52,7 +52,6 @@ receivers:
     transport: tcp
     username: devtedsuser
     password: devtedspass
-    
     collection_interval: 10s
     tls:
       insecure: true
@@ -78,7 +77,6 @@ receivers:
               - localhost:8888
             labels:
               job_name: otel-collector
-postgres
 processors:
   batch:
     send_batch_size: 10000
@@ -151,7 +149,7 @@ processors:
       - name: host.name
       - name: host.type
       - name: container.name
-
+ 
 extensions:
   health_check:
     endpoint: 0.0.0.0:13133
@@ -159,7 +157,7 @@ extensions:
     endpoint: 0.0.0.0:55679
   pprof:
     endpoint: 0.0.0.0:1777
-
+ 
 exporters:
   clickhousetraces:
     datasource: tcp://clickhouse:9000/signoz_traces
@@ -177,7 +175,7 @@ exporters:
     timeout: 10s
     use_new_schema: true
   # logging: {}
-
+ 
 service:
   telemetry:
     logs:
@@ -189,19 +187,6 @@ service:
     - zpages
     - pprof
   pipelines:
-    metrics:
-      receivers: [otlp, sqlquery]
-      processors: [batch]
-      exporters: [clickhousemetricswrite]
-    metrics/prometheus:
-      receivers: [prometheus]
-      processors: [batch]
-      exporters: [clickhousemetricswrite/prometheus]
-    logs:
-      receivers: [otlp, tcplog/docker]
-      processors: [batch]
-      exporters: [clickhouselogsexporter]
-  # pipelines:
     traces:
       receivers: [jaeger, otlp]
       processors: [signozspanmetrics/cumulative, signozspanmetrics/delta, batch]
@@ -222,3 +207,5 @@ service:
       receivers: [otlp, tcplog/docker]
       processors: [batch]
       exporters: [clickhouselogsexporter]
+ 
+ 

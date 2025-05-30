@@ -43,10 +43,19 @@ receivers:
       #   tracking_column: log_id
       #   logs:
       #     - body_column: log_body
-      - sql: "select count(*) as count, genre from movie group by genre"
+      - sql: "select count(*) as count FROM inventories WHERE product_id = 18 AND quantity = 0"
         metrics:
-          - metric_name: movie.genres
+          - metric_name: "lcbo_inventory_count"
             value_column: "count"
+  postgresql:
+    endpoint: db:5432
+    transport: tcp
+    username: devtedsuser
+    password: devtedspass
+    
+    collection_interval: 10s
+    tls:
+      insecure: true
   hostmetrics:
     collection_interval: 30s
     root_path: /hostfs
@@ -69,8 +78,7 @@ receivers:
               - localhost:8888
             labels:
               job_name: otel-collector
-
-
+postgres
 processors:
   batch:
     send_batch_size: 10000
@@ -181,12 +189,25 @@ service:
     - zpages
     - pprof
   pipelines:
+    metrics:
+      receivers: [otlp, sqlquery]
+      processors: [batch]
+      exporters: [clickhousemetricswrite]
+    metrics/prometheus:
+      receivers: [prometheus]
+      processors: [batch]
+      exporters: [clickhousemetricswrite/prometheus]
+    logs:
+      receivers: [otlp, tcplog/docker]
+      processors: [batch]
+      exporters: [clickhouselogsexporter]
+  # pipelines:
     traces:
       receivers: [jaeger, otlp]
       processors: [signozspanmetrics/cumulative, signozspanmetrics/delta, batch]
       exporters: [clickhousetraces]
     metrics:
-      receivers: [otlp,sqlquery]
+      receivers: [otlp,postgresql,sqlquery]
       processors: [batch]
       exporters: [clickhousemetricswrite]
     metrics/generic:
